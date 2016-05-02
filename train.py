@@ -46,8 +46,8 @@ if __name__=="__main__":
     parser.add_argument('--data_dir', type=str, default='data/ptb', help='data directory. Should contain train.txt/valid.txt/test.txt with input data')
     # model params
     parser.add_argument('--rnn_size', type=int, default=650, help='size of LSTM internal state')
-    parser.add_argument('--use_words', type=int, default=1, help='use words (1=yes)')
-    parser.add_argument('--use_chars', type=int, default=0, help='use characters (1=yes)')
+    parser.add_argument('--use_words', type=int, default=0, help='use words (1=yes)')
+    parser.add_argument('--use_chars', type=int, default=1, help='use characters (1=yes)')
     parser.add_argument('--highway_layers', type=int, default=2, help='number of highway layers')
     parser.add_argument('--word_vec_size', type=int, default=650, help='dimensionality of word embeddings')
     parser.add_argument('--char_vec_size', type=int, default=15, help='dimensionality of character embeddings')
@@ -72,7 +72,7 @@ if __name__=="__main__":
     parser.add_argument('--print_every', type=int, default=500, help='how many steps/minibatches between printing out the loss')
     parser.add_argument('--save_every', type=int, default=5, help='save every n epochs')
     parser.add_argument('--checkpoint_dir', type=str, default='cv', help='output directory where checkpoints get written')
-    parser.add_argument('--savefile', type=str, default='keras1.0_nozero', help='filename to autosave the checkpont to. Will be inside checkpoint_dir/')
+    parser.add_argument('--savefile', type=str, default='char-large', help='filename to autosave the checkpoint to. Will be inside checkpoint_dir/')
     parser.add_argument('--EOS', type=str, default='+', help='<EOS> symbol. should be a single unused character (like +) for PTB and blank for others')
     parser.add_argument('--skip_train', default=False, help='skip training', action='store_true')
 

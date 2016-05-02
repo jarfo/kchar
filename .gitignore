@@ -1,0 +1,6 @@
+.project
+.pydevproject
+cv
+*.npy
+*.npz
+*.pyc
