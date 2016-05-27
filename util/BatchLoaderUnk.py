@@ -103,9 +103,16 @@ class BatchLoaderUnk:
             # pull out the correct next batch
             idx = self.batch_idx[split_idx]
             word = self.all_batches[split_idx][0][idx]
-            ydata = self.all_batches[split_idx][1][idx]
+            sparse_ydata = self.all_batches[split_idx][1][idx]
             chars = self.all_batches[split_idx][2][idx]
-            yield ({'word':word, 'chars':chars}, np.expand_dims(ydata,axis=2))
+            # expand dims for sparse_cross_entropy optimization
+            # ydata = np.expand_dims(sparse_ydata, axis=2)
+            ydata = np.zeros(sparse_ydata.shape + (self.word_vocab_size,))
+            for r in range(ydata.shape[0]):
+                for c in range(ydata.shape[1]): 
+                    ydata[r, c, sparse_ydata[r,c]] = 1
+                    
+            yield ({'word':word, 'chars':chars}, ydata)
 
     def text_to_tensor(self, tokens, input_files, out_vocabfile, out_tensorfile, out_charfile, max_word_l):
         print 'Processing text into tensors...'
