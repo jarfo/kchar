@@ -6,7 +6,7 @@ Implementation of the character-based language model proposed in the paper [Char
 The code is based on the [original LUA source code](https://github.com/yoonkim/lstm-char-cnn) for the Torch library.
 
 ### Requirements
-Code is written in python and requires [Keras](https://github.com/fchollet/keras).
+Code is written in python 2.7 and requires [Keras](https://github.com/fchollet/keras).
 ```
 ### Data
 Data should be split into `train.txt`, `valid.txt`, and `test.txt`
