@@ -40,7 +40,7 @@ Evaluation can be performed via the following script:
 ```
 python evaluate.py --model cv/char-large --vocabulary data/ptb/vocab.npz --init init.npy --text data/ptb/test.txt --calc
 ```
-With the --calc option the state of the network is not reset after each sentence, and the mena value of the initial state is saved in the --init file.
+With the --calc option the state of the network is not reset after each sentence, and the mean value of the initial state is saved in the --init file.
 Using this cross-sentence information helps in the case of the provided PTB data but it is not useful for sentences in random order.
 
 For this later case, we can evaluate the perplexity using a precomputed --init file as the initial state of the LSTM networks at the beginning of each sentence
