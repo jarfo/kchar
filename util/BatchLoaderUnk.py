@@ -106,11 +106,7 @@ class BatchLoaderUnk:
             sparse_ydata = self.all_batches[split_idx][1][idx]
             chars = self.all_batches[split_idx][2][idx]
             # expand dims for sparse_cross_entropy optimization
-            # ydata = np.expand_dims(sparse_ydata, axis=2)
-            ydata = np.zeros(sparse_ydata.shape + (self.word_vocab_size,))
-            for r in range(ydata.shape[0]):
-                for c in range(ydata.shape[1]): 
-                    ydata[r, c, sparse_ydata[r,c]] = 1
+            ydata = np.expand_dims(sparse_ydata, axis=2)
                     
             yield ({'word':word, 'chars':chars}, ydata)
 

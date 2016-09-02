@@ -51,8 +51,7 @@ def load_model(name):
     with open(name, 'rt') as f:
         json_string = f.read()
     model = model_from_json(json_string, custom_objects={'sModel': sModel})
-    # model.compile(loss='sparse_categorical_crossentropy', optimizer=SGD)
-    model.compile(loss='categorical_crossentropy', optimizer=SGD)
+    model.compile(loss='sparse_categorical_crossentropy', optimizer=SGD)
     return model
 
 
@@ -122,7 +121,6 @@ def LSTMCNN(opt):
     print model.summary()
 
     optimizer = sSGD(lr=opt.learning_rate, clipnorm=opt.max_grad_norm, scale=float(opt.seq_length))
-    # model.compile(loss='sparse_categorical_crossentropy', optimizer=optimizer)
-    model.compile(loss='categorical_crossentropy', optimizer=optimizer)
+    model.compile(loss='sparse_categorical_crossentropy', optimizer=optimizer)
 
     return model
