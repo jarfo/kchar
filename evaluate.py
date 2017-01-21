@@ -4,7 +4,7 @@ import re
 import argparse
 import cPickle as pickle
 from model.LSTMCNN import LSTMCNN
-from util.BatchLoaderUnk import Tokens # needed by pickle.load()
+from util.BatchLoaderUnk import Tokens, encoding # needed by pickle.load()
 from math import exp
 
 def vocab_unpack(vocab):
@@ -90,7 +90,7 @@ def main(name, vocabulary, init, text, calc):
     
     ev = evaluator(name, vocabulary, None if calc else init)
     
-    f = codecs.open(text, 'r', 'utf8')
+    f = codecs.open(text, 'r', encoding)
     if calc:
         lp = 0;
         nw = 0;

@@ -8,6 +8,9 @@ import gc
 import re
 from collections import Counter, OrderedDict, namedtuple
 
+encoding='utf8'
+# encoding='iso-8859-1'
+
 Tokens = namedtuple('Tokens', ['EOS', 'UNK', 'START', 'END', 'ZEROPAD'])
 
 def vocab_unpack(vocab):
@@ -142,7 +145,7 @@ class BatchLoaderUnk:
                 word = word.replace(tokens.UNK, '')
                 charcount.update(word)
             
-            f = codecs.open(input_files[split], 'r', 'utf8')
+            f = codecs.open(input_files[split], 'r', encoding)
             counts = 0
             for line in f:
                 line = line.replace('<unk>', tokens.UNK)  # replace unk with a single character
@@ -175,7 +178,7 @@ class BatchLoaderUnk:
 
         print 'Char counts:'
         for ii, cc in enumerate(charcount.most_common()):
-            print ii, cc[0].encode('utf8'), cc[1]
+            print ii, cc[0].encode(encoding), cc[1]
                     
         print 'After first pass of data, max word length is: ', max_word_l_tmp
         print 'Token count: train %d, val %d, test %d' % (split_counts[0], split_counts[1], split_counts[2])
@@ -205,7 +208,7 @@ class BatchLoaderUnk:
                     output_chars[word_num, :len(chars)] = chars
                 return word_num + 1
 
-            f = codecs.open(input_files[split], 'r', 'utf8')
+            f = codecs.open(input_files[split], 'r', encoding)
             word_num = 0
             for line in f:
                 line = line.replace('<unk>', tokens.UNK)  # replace unk with a single character
