@@ -155,7 +155,7 @@ class sModel(Model):
         val_losses = []
         lr = K.get_value(self.optimizer.lr)
         for epoch in range(epochs):
-            super(sModel, self).fit_generator(generator, steps_per_epoch, epochs=1, verbose=1, initial_epoch=epoch)
+            super(sModel, self).fit_generator(generator, steps_per_epoch, epochs=epoch+1, verbose=1, initial_epoch=epoch)
             val_loss = exp(self.evaluate_generator(validation_data, validation_steps))
             val_losses.append(val_loss)
             print 'Epoch {}/{}. Validation loss: {}'.format(epoch + 1, epochs, val_loss)
