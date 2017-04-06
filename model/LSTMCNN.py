@@ -1,10 +1,140 @@
 from math import exp
 
+from keras import initializers, regularizers, activations, constraints
+from keras.engine import Layer, InputSpec
 from keras.models import Model, model_from_json
-from keras.layers import Input, Embedding, TimeDistributed, Dense, Dropout, Reshape, Merge, Highway, LSTM, Convolution2D, MaxPooling2D, BatchNormalization
+from keras.layers import Input, Embedding, TimeDistributed, Dense, Dropout, Reshape, Concatenate, LSTM, Conv2D, MaxPooling2D, BatchNormalization
 from keras.optimizers import SGD
 from keras import backend as K
 
+class Highway(Layer):
+    """Densely connected highway network.
+    Highway layers are a natural extension of LSTMs to feedforward networks.
+    # Arguments
+        init: name of initialization function for the weights of the layer
+            (see [initializations](../initializations.md)),
+            or alternatively, Theano function to use for weights
+            initialization. This parameter is only relevant
+            if you don't pass a `weights` argument.
+        activation: name of activation function to use
+            (see [activations](../activations.md)),
+            or alternatively, elementwise Theano function.
+            If you don't specify anything, no activation is applied
+            (ie. "linear" activation: a(x) = x).
+        weights: list of Numpy arrays to set as initial weights.
+            The list should have 2 elements, of shape `(input_dim, output_dim)`
+            and (output_dim,) for weights and biases respectively.
+        W_regularizer: instance of [WeightRegularizer](../regularizers.md)
+            (eg. L1 or L2 regularization), applied to the main weights matrix.
+        b_regularizer: instance of [WeightRegularizer](../regularizers.md),
+            applied to the bias.
+        activity_regularizer: instance of [ActivityRegularizer](../regularizers.md),
+            applied to the network output.
+        W_constraint: instance of the [constraints](../constraints.md) module
+            (eg. maxnorm, nonneg), applied to the main weights matrix.
+        b_constraint: instance of the [constraints](../constraints.md) module,
+            applied to the bias.
+        bias: whether to include a bias
+            (i.e. make the layer affine rather than linear).
+        input_dim: dimensionality of the input (integer). This argument
+            (or alternatively, the keyword argument `input_shape`)
+            is required when using this layer as the first layer in a model.
+    # Input shape
+        2D tensor with shape: `(nb_samples, input_dim)`.
+    # Output shape
+        2D tensor with shape: `(nb_samples, input_dim)`.
+    # References
+        - [Highway Networks](http://arxiv.org/abs/1505.00387v2)
+    """
+
+    def __init__(self,
+                 init='glorot_uniform',
+                 activation=None,
+                 weights=None,
+                 W_regularizer=None,
+                 b_regularizer=None,
+                 activity_regularizer=None,
+                 W_constraint=None,
+                 b_constraint=None,
+                 bias=True,
+                 input_dim=None,
+                 **kwargs):
+
+        self.init = initializers.get(init)
+        self.activation = activations.get(activation)
+
+        self.W_regularizer = regularizers.get(W_regularizer)
+        self.b_regularizer = regularizers.get(b_regularizer)
+        self.activity_regularizer = regularizers.get(activity_regularizer)
+
+        self.W_constraint = constraints.get(W_constraint)
+        self.b_constraint = constraints.get(b_constraint)
+
+        self.bias = bias
+        self.initial_weights = weights
+        self.input_spec = InputSpec(ndim=2)
+
+        self.input_dim = input_dim
+        if self.input_dim:
+            kwargs['input_shape'] = (self.input_dim,)
+        super(Highway, self).__init__(**kwargs)
+
+    def build(self, input_shape):
+        input_dim = input_shape[1]
+        self.input_spec = InputSpec(dtype=K.floatx(),
+                                    shape=(None, input_dim))
+
+        self.W = self.add_weight((input_dim, input_dim),
+                                 initializer=self.init,
+                                 name='W',
+                                 regularizer=self.W_regularizer,
+                                 constraint=self.W_constraint)
+        self.W_carry = self.add_weight((input_dim, input_dim),
+                                       initializer=self.init,
+                                       name='W_carry')
+        if self.bias:
+            self.b = self.add_weight((input_dim,),
+                                     initializer='zero',
+                                     name='b',
+                                     regularizer=self.b_regularizer,
+                                     constraint=self.b_constraint)
+            self.b_carry = self.add_weight((input_dim,),
+                                           initializer='one',
+                                           name='b_carry')
+        else:
+            self.b_carry = None
+
+        if self.initial_weights is not None:
+            self.set_weights(self.initial_weights)
+            del self.initial_weights
+        self.built = True
+
+    def call(self, x):
+        y = K.dot(x, self.W_carry)
+        if self.bias:
+            y += self.b_carry
+        transform_weight = activations.sigmoid(y)
+        y = K.dot(x, self.W)
+        if self.bias:
+            y += self.b
+        act = self.activation(y)
+        act *= transform_weight
+        output = act + (1 - transform_weight) * x
+        return output
+
+    def get_config(self):
+        config = {'init': initializers.serialize(self.init),
+                  'activation': activations.serialize(self.activation),
+                  'W_regularizer': regularizers.serialize(self.W_regularizer),
+                  'b_regularizer': regularizers.serialize(self.b_regularizer),
+                  'activity_regularizer': regularizers.serialize(self.activity_regularizer),
+                  'W_constraint': constraints.serialize(self.W_constraint),
+                  'b_constraint': constraints.serialize(self.b_constraint),
+                  'bias': self.bias,
+                  'input_dim': self.input_dim}
+        base_config = super(Highway, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
+    
 class sSGD(SGD):
     def __init__(self, scale=1., **kwargs):
         super(sSGD, self).__init__(**kwargs)
@@ -60,11 +190,11 @@ def CNN(seq_length, length, input_size, feature_maps, kernels, x):
     concat_input = []
     for feature_map, kernel in zip(feature_maps, kernels):
         reduced_l = length - kernel + 1
-        conv = Convolution2D(feature_map, 1, kernel, activation='tanh', dim_ordering='tf')(x)
-        maxp = MaxPooling2D((1, reduced_l), dim_ordering='tf')(conv)
+        conv = Conv2D(feature_map, (1, kernel), activation='tanh', data_format="channels_last")(x)
+        maxp = MaxPooling2D((1, reduced_l), data_format="channels_last")(conv)
         concat_input.append(maxp)
 
-    x = Merge(mode='concat')(concat_input)
+    x = Concatenate()(concat_input)
     x = Reshape((seq_length, sum(feature_maps)))(x)
     return x
 
@@ -94,7 +224,7 @@ def LSTMCNN(opt):
         chars_embedding = TimeDistributed(Embedding(opt.char_vocab_size, opt.char_vec_size, name='chars_embedding'))(chars)
         cnn = CNN(opt.seq_length, opt.max_word_l, opt.char_vec_size, opt.feature_maps, opt.kernels, chars_embedding)
         if opt.use_words:
-            x = Merge(mode='concat')([cnn, word_vecs])
+            x = Concatenate()[cnn, word_vecs]
             inputs = [chars, word]
         else:
             x = cnn
@@ -110,15 +240,15 @@ def LSTMCNN(opt):
         x = TimeDistributed(Highway(activation='relu'))(x)
 
     for l in range(opt.num_layers):
-        x = LSTM(opt.rnn_size, activation='tanh', inner_activation='sigmoid', return_sequences=True, stateful=True)(x)
+        x = LSTM(opt.rnn_size, activation='tanh', recurrent_activation='sigmoid', return_sequences=True, stateful=True)(x)
 
         if opt.dropout > 0:
             x = Dropout(opt.dropout)(x)
 
     output = TimeDistributed(Dense(opt.word_vocab_size, activation='softmax'))(x)
     
-    model = sModel(input=inputs, output=output)
-    print model.summary()
+    model = sModel(inputs=inputs, outputs=output)
+    model.summary()
 
     optimizer = sSGD(lr=opt.learning_rate, clipnorm=opt.max_grad_norm, scale=float(opt.seq_length))
     model.compile(loss='sparse_categorical_crossentropy', optimizer=optimizer)
