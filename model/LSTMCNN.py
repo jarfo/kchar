@@ -151,18 +151,18 @@ class sSGD(SGD):
         return grads
     
 class sModel(Model):
-    def fit_generator(self, generator, samples_per_epoch, nb_epoch, validation_generator, nb_val_samples, opt):
+    def fit_generator(self, generator, steps_per_epoch, epochs, validation_data, validation_steps, opt):
         val_losses = []
         lr = K.get_value(self.optimizer.lr)
-        for epoch in range(nb_epoch):
-            super(sModel, self).fit_generator(generator, samples_per_epoch, 1, verbose=1)
-            val_loss = exp(self.evaluate_generator(validation_generator, nb_val_samples))
+        for epoch in range(epochs):
+            super(sModel, self).fit_generator(generator, steps_per_epoch, epochs=1, verbose=1, initial_epoch=epoch)
+            val_loss = exp(self.evaluate_generator(validation_data, validation_steps))
             val_losses.append(val_loss)
-            print 'Epoch {}/{}. Validation loss: {}'.format(epoch + 1, nb_epoch, val_loss)
+            print 'Epoch {}/{}. Validation loss: {}'.format(epoch + 1, epochs, val_loss)
             if len(val_losses) > 2 and (val_losses[-2] - val_losses[-1]) < opt.decay_when:
                 lr *= opt.learning_rate_decay
                 K.set_value(self.optimizer.lr, lr)
-            if epoch == nb_epoch-1 or epoch % opt.save_every == 0:
+            if epoch == epochs-1 or epoch % opt.save_every == 0:
                 savefile = '%s/lm_%s_epoch%d_%.2f.h5' % (opt.checkpoint_dir, opt.savefile, epoch + 1, val_loss)
                 self.save_weights(savefile)
     @property

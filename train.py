@@ -27,8 +27,8 @@ def main(opt):
             os.makedirs(opt.checkpoint_dir)
         pickle.dump(opt, open('{}/{}.pkl'.format(opt.checkpoint_dir, opt.savefile), "wb"))
         model.save('{}/{}.json'.format(opt.checkpoint_dir, opt.savefile))
-        model.fit_generator(loader.next_batch(Train), loader.split_sizes[Train]*loader.batch_size, opt.max_epochs,
-                            loader.next_batch(Validation), loader.split_sizes[Validation]*loader.batch_size, opt)
+        model.fit_generator(loader.next_batch(Train), loader.split_sizes[Train], opt.max_epochs,
+                            loader.next_batch(Validation), loader.split_sizes[Validation], opt)
         model.save_weights('{}/{}.h5'.format(opt.checkpoint_dir, opt.savefile), overwrite=True)
     else:
         model = load_model('{}/{}.json'.format(opt.checkpoint_dir, opt.savefile))
@@ -36,7 +36,7 @@ def main(opt):
         print model.summary()
 
     # evaluate on full test set.
-    test_perp = model.evaluate_generator(loader.next_batch(Test), loader.split_sizes[Test]*loader.batch_size)
+    test_perp = model.evaluate_generator(loader.next_batch(Test), loader.split_sizes[Test])
     print 'Perplexity on test set: ', exp(test_perp)
 
 if __name__=="__main__":
