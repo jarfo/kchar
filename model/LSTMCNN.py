@@ -224,7 +224,7 @@ def LSTMCNN(opt):
         chars_embedding = TimeDistributed(Embedding(opt.char_vocab_size, opt.char_vec_size, name='chars_embedding'))(chars)
         cnn = CNN(opt.seq_length, opt.max_word_l, opt.char_vec_size, opt.feature_maps, opt.kernels, chars_embedding)
         if opt.use_words:
-            x = Concatenate()[cnn, word_vecs]
+            x = Concatenate()([cnn, word_vecs])
             inputs = [chars, word]
         else:
             x = cnn
@@ -246,7 +246,7 @@ def LSTMCNN(opt):
             x = Dropout(opt.dropout)(x)
 
     output = TimeDistributed(Dense(opt.word_vocab_size, activation='softmax'))(x)
-    
+
     model = sModel(inputs=inputs, outputs=output)
     model.summary()
 
