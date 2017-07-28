@@ -7,7 +7,7 @@ The code is based on the [original LUA source code](https://github.com/yoonkim/l
 
 ### Requirements
 Code is written in python 2.7 and requires [Keras 2](https://github.com/fchollet/keras).
-```
+
 ### Data
 Data should be split into `train.txt`, `valid.txt`, and `test.txt`
 
