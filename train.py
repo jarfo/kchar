@@ -1,8 +1,10 @@
+from __future__ import print_function, division
+
 import argparse
 import json
 import numpy as np
 import os
-import cPickle as pickle
+from six.moves import cPickle as pickle
 from util.BatchLoaderUnk import BatchLoaderUnk, Tokens
 from model.LSTMCNN import LSTMCNN, load_model
 from math import exp
@@ -14,13 +16,13 @@ def main(opt):
     opt.word_vocab_size = min(opt.n_words, len(loader.idx2word))
     opt.char_vocab_size = min(opt.n_chars, len(loader.idx2char))
     opt.max_word_l = loader.max_word_l
-    print 'Word vocab size: ', opt.word_vocab_size, \
-        ', Char vocab size: ', opt.char_vocab_size, \
-        ', Max word length (incl. padding): ', opt.max_word_l
+    print('Word vocab size:', opt.word_vocab_size,
+        ', Char vocab size:', opt.char_vocab_size,
+        ', Max word length (incl. padding):', opt.max_word_l)
 
     # define the model
     if not opt.skip_train:
-        print 'creating an LSTM-CNN with ', opt.num_layers, ' layers'
+        print('creating an LSTM-CNN with', opt.num_layers, 'layers')
         model = LSTMCNN(opt)
             # make sure output directory exists
         if not os.path.exists(opt.checkpoint_dir):
@@ -33,11 +35,11 @@ def main(opt):
     else:
         model = load_model('{}/{}.json'.format(opt.checkpoint_dir, opt.savefile))
         model.load_weights('{}/{}.h5'.format(opt.checkpoint_dir, opt.savefile))
-        print model.summary()
+        print(model.summary())
 
     # evaluate on full test set.
     test_perp = model.evaluate_generator(loader.next_batch(Test), loader.split_sizes[Test])
-    print 'Perplexity on test set: ', exp(test_perp)
+    print('Perplexity on test set:', exp(test_perp))
 
 if __name__=="__main__":
 
@@ -93,7 +95,7 @@ if __name__=="__main__":
         ZEROPAD=' ' # zero-pad token
     )
 
-    print 'parsed parameters:'
-    print json.dumps(vars(params), indent = 2)
+    print('parsed parameters:')
+    print(json.dumps(vars(params), indent = 2))
 
     main(params)

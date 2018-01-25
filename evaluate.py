@@ -1,8 +1,10 @@
+from __future__ import print_function, division
+
 import codecs
 import numpy as np
 import re
 import argparse
-import cPickle as pickle
+from six.moves import cPickle as pickle
 from model.LSTMCNN import LSTMCNN
 from util.BatchLoaderUnk import Tokens, encoding # needed by pickle.load()
 from math import exp
@@ -20,7 +22,7 @@ class Vocabulary:
         vocab_mapping = np.load(vocab_file)
         self.idx2word, self.word2idx, self.idx2char, self.char2idx = vocab_unpack(vocab_mapping)
         self.vocab_size = len(self.idx2word)
-        print 'Word vocab size: %d, Char vocab size: %d' % (len(self.idx2word), len(self.idx2char))
+        print('Word vocab size: %d, Char vocab size: %d' % (len(self.idx2word), len(self.idx2char)))
         self.word_vocab_size = len(self.idx2word)
         self.char_vocab_size = len(self.idx2char)
 
@@ -30,7 +32,7 @@ class Vocabulary:
             w = self.word2idx[self.tokens.UNK]
         else:
             w = self.word2idx[word] if word in self.word2idx else self.word2idx[self.tokens.UNK]
-            
+
         c = np.zeros(self.max_word_l, dtype='int32')
         chars = [self.char2idx[self.tokens.START]] # start-of-word symbol
         chars += [self.char2idx[char] for char in word if char in self.char2idx]
@@ -40,7 +42,7 @@ class Vocabulary:
             c = chars[:self.max_word_l]
         else:
             c[:len(chars)] = chars
-            
+
         return w, c
 
     def get_input(self, line):
@@ -87,9 +89,9 @@ class evaluator:
         return self.model.evaluate(x, y, batch_size=1, verbose=0), nwords
 
 def main(name, vocabulary, init, text, calc):
-    
+
     ev = evaluator(name, vocabulary, None if calc else init)
-    
+
     f = codecs.open(text, 'r', encoding)
     if calc:
         lp = 0;
@@ -103,7 +105,7 @@ def main(name, vocabulary, init, text, calc):
             for ssum, update in zip(state_sum, ev.model.state_updates_value):
                 ssum += update
             nl += 1
-            print "Perplexity = ", exp(lp/nw), "\t(", nl, ")", ssum[0][0]/nl
+            print("Perplexity = {:.1f}\t({})".format(exp(lp/nw), nl))
 
         state_mean = [a/nl for a in state_sum]
         np.save(init, state_mean)
@@ -117,8 +119,8 @@ def main(name, vocabulary, init, text, calc):
             lp += lprob*nwords
             nw += nwords
             nl += 1
-            print "Perplexity = ", exp(lp/nw), "\t(", nl, ")"
-        
+            print("Perplexity = {:.1f}\t({})".format(exp(lp/nw), nl))
+
     exit(0)
 
 if __name__ == "__main__":

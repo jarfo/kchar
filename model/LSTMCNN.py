@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from math import exp
 
 from keras import initializers, regularizers, activations, constraints
@@ -134,7 +136,7 @@ class Highway(Layer):
                   'input_dim': self.input_dim}
         base_config = super(Highway, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
-    
+
 class sSGD(SGD):
     def __init__(self, scale=1., **kwargs):
         super(sSGD, self).__init__(**kwargs)
@@ -149,7 +151,7 @@ class sSGD(SGD):
         if hasattr(self, 'clipvalue') and self.clipvalue > 0:
             grads = [K.clip(g, -self.clipvalue, self.clipvalue) for g in grads]
         return grads
-    
+
 class sModel(Model):
     def fit_generator(self, generator, steps_per_epoch, epochs, validation_data, validation_steps, opt):
         val_losses = []
@@ -158,7 +160,7 @@ class sModel(Model):
             super(sModel, self).fit_generator(generator, steps_per_epoch, epochs=epoch+1, verbose=1, initial_epoch=epoch)
             val_loss = exp(self.evaluate_generator(validation_data, validation_steps))
             val_losses.append(val_loss)
-            print 'Epoch {}/{}. Validation loss: {}'.format(epoch + 1, epochs, val_loss)
+            print('Epoch {}/{}. Validation perplexity: {}'.format(epoch + 1, epochs, val_loss))
             if len(val_losses) > 2 and (val_losses[-2] - val_losses[-1]) < opt.decay_when:
                 lr *= opt.learning_rate_decay
                 K.set_value(self.optimizer.lr, lr)
@@ -186,7 +188,7 @@ def load_model(name):
 
 
 def CNN(seq_length, length, input_size, feature_maps, kernels, x):
-    
+
     concat_input = []
     for feature_map, kernel in zip(feature_maps, kernels):
         reduced_l = length - kernel + 1
