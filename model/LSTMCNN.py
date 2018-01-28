@@ -187,7 +187,7 @@ def load_model(name):
     return model
 
 
-def CNN(seq_length, length, input_size, feature_maps, kernels, x):
+def CNN(seq_length, length, feature_maps, kernels, x):
 
     concat_input = []
     for feature_map, kernel in zip(feature_maps, kernels):
@@ -218,13 +218,13 @@ def LSTMCNN(opt):
     # opt.batch_size = number of sequences in each batch
 
     if opt.use_words:
-        word = Input(batch_shape=(opt.batch_size, opt.seq_length), dtype='int32', name='word')
-        word_vecs = Embedding(opt.word_vocab_size, opt.word_vec_size, input_length=opt.seq_length)(word)
+        word = Input(batch_shape=(opt.batch_size, opt.seq_length), name='word')
+        word_vecs = Embedding(opt.word_vocab_size, opt.word_vec_size)(word)
 
     if opt.use_chars:
-        chars = Input(batch_shape=(opt.batch_size, opt.seq_length, opt.max_word_l), dtype='int32', name='chars')
+        chars = Input(batch_shape=(opt.batch_size, opt.seq_length, opt.max_word_l), name='chars')
         chars_embedding = Embedding(opt.char_vocab_size, opt.char_vec_size, name='chars_embedding')(chars)
-        cnn = CNN(opt.seq_length, opt.max_word_l, opt.char_vec_size, opt.feature_maps, opt.kernels, chars_embedding)
+        cnn = CNN(opt.seq_length, opt.max_word_l, opt.feature_maps, opt.kernels, chars_embedding)
         if opt.use_words:
             x = Concatenate()([cnn, word_vecs])
             inputs = [chars, word]
