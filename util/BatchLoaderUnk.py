@@ -39,8 +39,8 @@ class BatchLoaderUnk:
         all_data = []
         all_data_char = []
         for split in range(3):
-            all_data.append(np.load("{}_{}.npy".format(tensor_file, split)))  # train, valid, test tensors
-            all_data_char.append(np.load("{}_{}.npy".format(char_file, split)))  # train, valid, test character indices
+            all_data.append(np.load("{}_{}.npy".format(tensor_file, split), allow_pickle=True))  # train, valid, test tensors
+            all_data_char.append(np.load("{}_{}.npy".format(char_file, split), allow_pickle=True))  # train, valid, test character indices
         vocab_mapping = np.load(vocab_file)
         self.idx2word, self.word2idx, self.idx2char, self.char2idx = vocab_unpack(vocab_mapping)
         self.vocab_size = len(self.idx2word)
